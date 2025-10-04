@@ -41,13 +41,35 @@ SQL_PROMPT = ChatPromptTemplate.from_template(
 
 def history_to_text(history_pairs):
     """history_pairs is a list of tuples: [(user_q, assistant_a), ...]."""
+    # If the history is empty, return "None"
     if not history_pairs:
         return "None"
-    return "".join(f"User: {q}\nAssistant: {a}\n" for q, a in history_pairs)
+    
+    # Build conversation lines
+    conversation_lines = []
+    for user_q, assistant_a in history_pairs:
+        conversation_lines.append(f"User: {user_q}")
+        conversation_lines.append(f"Assistant: {assistant_a}")
+    
+    # Join all lines with a newline character
+    return "\n".join(conversation_lines)
 
 def extract_sql_code(text: str) -> str:
-    fenced = re.findall(r"```(?:sql)?\s*([\s\S]*?)```", text, flags=re.IGNORECASE)
-    cleaned = fenced[0] if fenced else text
+
+    # Look for text inside triple backticks, optionally starting with "sql"
+    matches = re.findall(
+        r"```(?:sql)?\s*([\s\S]*?)```",  # regex pattern
+        text,
+        flags=re.IGNORECASE
+    )
+
+    # If a match is found, use the first one; otherwise, use the original text
+    if matches:
+        cleaned = matches[0]
+    else:
+        cleaned = text
+
+    # Remove extra backticks and whitespace
     return cleaned.strip().strip("`").strip()
 
 def run_query(query: str):
