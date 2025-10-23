@@ -1,0 +1,427 @@
+{
+  "name": "AI_CSR_Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "endpointUrl": "http://127.0.0.1:8001/mcp",
+        "serverTransport": "sse",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        864,
+        192
+      ],
+      "id": "ab99937b-c39e-4b69-ae7f-f7cd45c11b16",
+      "name": "Tickets"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://127.0.0.1:8002/mcp",
+        "serverTransport": "sse",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        992,
+        192
+      ],
+      "id": "4db2b71a-c1fb-49a2-8bcf-372b798c7149",
+      "name": "Fulfillment"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://127.0.0.1:8003/mcp",
+        "serverTransport": "sse",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        192
+      ],
+      "id": "20fa2cf2-421d-414f-af8b-ac16cc9bf20f",
+      "name": "Orders"
+    },
+    {
+      "parameters": {
+        "formTitle": "Upload your policies for  RAG",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload your file(s)",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        528
+      ],
+      "id": "7747b8a3-b44e-40fe-8a7b-60f3c3e05f9f",
+      "name": "Upload your file here",
+      "webhookId": "82848bc4-5ea2-4e5a-8bb6-3c09b94a8c5d"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        976,
+        768
+      ],
+      "id": "18e3ddb5-ed86-4edb-bfe0-e13b24ed985f",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "2jGoT8fKcpz1q5Zv",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        912,
+        544
+      ],
+      "id": "0adbea3a-55d3-43b0-9a32-aafee6b50d95",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "content": "## 📚 RAG - Load Data Flow",
+        "height": 460,
+        "width": 860,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        272,
+        416
+      ],
+      "typeVersion": 1,
+      "id": "8463fcad-b79a-4220-b09d-bbca33243182",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "value": "vector_store_key",
+          "mode": "list",
+          "cachedResultName": "vector_store_key"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.2,
+      "position": [
+        592,
+        432
+      ],
+      "id": "f2acd027-5a92-40d4-bcdb-04e43c212484",
+      "name": "Insert Data to Store"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "knowledge_base",
+        "toolDescription": "Use the FAQ and Policy Documents to answer queries from user. Also, the document gives details about the order and fulfilment status based on which actions can be taken against order. The document also has details about ticket update or create scenarios.",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "list",
+          "value": "vector_store_key"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        192
+      ],
+      "id": "34366d7a-e8cf-410e-8917-9f8eeca1809c",
+      "name": "PolicyDocuments"
+    },
+    {
+      "parameters": {
+        "content": "## AI Agent Workflow",
+        "height": 460,
+        "width": 1692,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -176,
+        -128
+      ],
+      "typeVersion": 1,
+      "id": "a7ad1a96-5e3d-4964-b1b5-d2b116b09ffd",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a Customer Service AI Agent that assists human CSRs.\n\nYou have access to the following tools connected to you in n8n:\nRAG / Policies\n[PolicyDocuments] — Retrieve internal policies/SOPs. Always check policies before taking action.\n\nMCP Tools\n[Tickets] — Tickets service (view/create/update support tickets).\nget_customer_tickets(customer_email?, order_id?)\nget_ticket_details(ticket_id)\nadd_ticket(customer_email, issue_description, order_id?, csr_name?)\nupdate_ticket(ticket_id, update_description)\n\n[Orders] — Orders service (status, cancel, returns).\nget_check_order(order_id)\nget_order_status(order_id)\nget_order_details(order_id)\ncancel_order(order_id) (only if cancellable)\ncancel_order_line(order_id, line_item_id) (line item id = item_id)\nreturn_order_create(order_id, line_item_id?, return_qty=1)\nget_current_datetime (use this to get current date and time for date related calculation eg: days since ship date etc)\n\n[Fulfillment] — Fulfillment service (shipping/tracking).\nget_fulfillment_status(order_id)\nupdate_fulfillment_status(order_id, status)\n\nOperating rules\nPolicy-first: Before executing any action (cancel, return, refund, update), call [policy_retriever] with a short query to verify the rule (e.g., “Can a shipped order be cancelled?”).\nIf policy disallows the request, explain briefly and perform the allowed alternative (e.g., initiate a return).\nQuote or paraphrase 1–2 lines from the retrieved policy. Also get confirmation from user prior to making any updates to orders.\n\nChoose the right tool:\nUse orders_mcp for order details, cancellations, returns, and status. Also, this can be used to get current datetime. To know if a item is returnable calculate the number of elapsed by using ship_date and current date.\nUse fulfillment_mcp for shipment status/tracking updates.\nUse tickets_mcp to log/append notes of the interaction.\n\nBe precise & safe:\nNever contradict policies.\nIf data is missing or ambiguous, ask a brief, targeted follow-up.\nUse exact IDs (e.g., ORD-010, ticket_id=5, line_item_id).\n\nUncertainty & Clarification Policy:\nIf the user request is ambiguous, incomplete, or risky (e.g., missing order_id, action may violate policy, or customer intent unclear), do not execute tools yet. First, ask one concise clarifying question. Also propose up to 3 quick options as structured JSON so the UI can render buttons.\n\nOut of Context Requests: Stay strictly within your role as a CSR Assistant.\nIf the user asks about anything outside company operations, politely decline to answer and guide them back to relevant topics.\n\nResponse Type:\nProvide response in professional user conversation style."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        864,
+        -32
+      ],
+      "id": "9664d85d-4681-4f2d-b774-91034bac18ff",
+      "name": "CSR Assistant"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9b42f0fd-6c87-4e81-83d0-b7150d8ea48d",
+              "name": "sessionId",
+              "value": "={{$json[\"body\"][\"sessionId\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "59bf20a7-6e03-4d3d-bf6f-de8e996e80bd",
+              "name": "action",
+              "value": "={{$json[\"body\"][\"action\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "e84f2226-aa81-4f83-b48f-71c095bdb3eb",
+              "name": "chatInput",
+              "value": "={{$json[\"body\"][\"chatInput\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "06b4d403-35f2-4aec-b004-28a6c0f20dc4",
+              "name": "",
+              "value": "={{ $env.OPENAI_API_KEY }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        320,
+        -32
+      ],
+      "id": "87a97452-e8da-4fe9-8f06-9253b95a1c10",
+      "name": "Mapping"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        192
+      ],
+      "id": "0dea47e0-f867-4130-b9e7-28340ce98fcf",
+      "name": "OpenAI LLM",
+      "credentials": {
+        "openAiApi": {
+          "id": "2jGoT8fKcpz1q5Zv",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fb032013-9f36-4f3b-82f1-33f2fe2e5380",
+        "responseMode": "lastNode",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        80,
+        -32
+      ],
+      "id": "f450b1d5-c6af-4992-ba8b-4ee894b99551",
+      "name": "Chat Listener",
+      "webhookId": "fb032013-9f36-4f3b-82f1-33f2fe2e5380"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        192
+      ],
+      "id": "a459d3a0-5537-4c53-8c56-e05ea5c9a428",
+      "name": "Context Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Tickets": {
+      "ai_tool": [
+        [
+          {
+            "node": "CSR Assistant",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fulfillment": {
+      "ai_tool": [
+        [
+          {
+            "node": "CSR Assistant",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orders": {
+      "ai_tool": [
+        [
+          {
+            "node": "CSR Assistant",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload your file here": {
+      "main": [
+        [
+          {
+            "node": "Insert Data to Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Insert Data to Store",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "PolicyDocuments",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Insert Data to Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PolicyDocuments": {
+      "ai_tool": [
+        [
+          {
+            "node": "CSR Assistant",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapping": {
+      "main": [
+        [
+          {
+            "node": "CSR Assistant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "CSR Assistant",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Listener": {
+      "main": [
+        [
+          {
+            "node": "Mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Context Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "CSR Assistant",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9002e365-d62a-43a5-9a3c-3002b8fd70ac",
+  "meta": {
+    "instanceId": "4e27d57ee71cfcd11217f4c004d66fe0ea0f2309d0dd545547fcb664833ab9ed"
+  },
+  "id": "3B6PObBa6MQzfa0J",
+  "tags": []
+}
